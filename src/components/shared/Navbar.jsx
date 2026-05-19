@@ -86,7 +86,7 @@ const Navbar = () => {
             {/* Get Started Button */}
             <Link
               href="/register"
-              className="bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-md hover:bg-blue-500 transition-all duration-200 shadow-sm"
+              className="bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-md hover:bg-blue-400 transition-all duration-200 shadow-sm"
             >
               Get Started
             </Link>
