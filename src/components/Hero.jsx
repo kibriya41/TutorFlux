@@ -1,444 +1,402 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { motion, useScroll, useTransform, useSpring, useInView } from "framer-motion";
-import { 
-  FaArrowRight, 
-  FaChevronLeft, 
-  FaChevronRight,
-  FaGraduationCap,
-  FaUsers,
-  FaCalendarAlt,
-  FaStar,
-  FaVideo,
-  FaShieldAlt,
-  FaClock
-} from "react-icons/fa";
+import { Button, Card } from "@heroui/react";
+import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  GraduationCap, ArrowRight, BookOpen, Users,
+  CalendarCheck, Shield, Star, Zap, ChevronRight,
+  Play, CheckCircle2, TrendingUp, Award
+} from "lucide-react";
+import { useState, useEffect } from "react";
 
-// --- Animation Variants ---
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }
-  })
-};
-
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.8 } }
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } }
-};
-
-const staggerContainer = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12, delayChildren: 0.2 }
-  }
-};
-
-const slideInRight = {
-  hidden: { opacity: 0, x: 60 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } }
-};
-
-const floatAnimation = {
-  y: [0, -12, 0],
-  transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-};
-
-// --- Components ---
-
-const AnimatedCounter = ({ value, suffix = "" }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
-  const [count, setCount] = useState(0);
-  
-  const numericValue = parseInt(value.replace(/\\D/g, ""));
-  
-  useEffect(() => {
-    if (!isInView) return;
-    let start = 0;
-    const duration = 2000;
-    const increment = numericValue / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= numericValue) {
-        setCount(numericValue);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
-    return () => clearInterval(timer);
-  }, [isInView, numericValue]);
-
-  return (
-    <span ref={ref}>
-      {count}{suffix}
-    </span>
-  );
-};
-
-const FloatingCard = ({ icon: Icon, title, subtitle, color, delay, position }) => {
-  return (
-    <motion.div
-      className={`absolute ${position} bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 flex items-center gap-3 z-20 border border-white/50`}
-      initial={{ opacity: 0, y: 30, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.6, ease: "easeOut" }}
-      whileHover={{ scale: 1.05, y: -5, transition: { duration: 0.2 } }}
-    >
-      <motion.div 
-        className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center flex-shrink-0`}
-        animate={{ rotate: [0, 5, -5, 0] }}
-        transition={{ duration: 5, repeat: Infinity, delay: delay + 1 }}
-      >
-        <Icon className="w-5 h-5 text-white" />
-      </motion.div>
-      <div>
-        <p className="text-sm font-bold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500">{subtitle}</p>
-      </div>
-    </motion.div>
-  );
-};
-
-const HeroSection = () => {
+const Hero = () => {
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const containerRef = useRef(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
 
-  // Parallax effects
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
-  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
-
-  const totalSlides = 5;
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % totalSlides);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const stats = [
-    { icon: FaGraduationCap, value: "2K", suffix: "+", label: "Expert Tutors", iconBg: "bg-blue-50", iconColor: "text-blue-600" },
-    { icon: FaUsers, value: "15K", suffix: "+", label: "Students", iconBg: "bg-purple-50", iconColor: "text-purple-600" },
-    { icon: FaCalendarAlt, value: "25K", suffix: "+", label: "Sessions Booked", iconBg: "bg-indigo-50", iconColor: "text-indigo-600" },
-    { icon: FaStar, value: "4.9", suffix: "/5", label: "Student Ratings", iconBg: "bg-amber-50", iconColor: "text-amber-500" },
+  const slides = [
+    {
+      title: "Find Expert Tutors",
+      subtitle: "Book Your Success",
+      description: "Connect with verified tutors for personalized online learning. Book sessions, get your digital token and learn without scheduling conflicts.",
+      image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop",
+      stats: "10K+ Students"
+    },
+    {
+      title: "Smart Booking System",
+      subtitle: "No More Conflicts",
+      description: "Our intelligent scheduling prevents time slot conflicts automatically. Focus on learning, we handle the logistics.",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop",
+      stats: "20K+ Sessions"
+    },
+    {
+      title: "Digital Session Tokens",
+      subtitle: "Secure & Organized",
+      description: "Every booking generates a unique digital token. Manage your classes efficiently with our organized dashboard.",
+      image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=600&fit=crop",
+      stats: "98% Satisfaction"
+    }
   ];
 
+  const features = [
+    {
+      icon: <BookOpen className="w-6 h-6" />,
+      title: "Expert Tutors",
+      description: "Learn from verified professionals with proven experience"
+    },
+    {
+      icon: <CalendarCheck className="w-6 h-6" />,
+      title: "Smart Scheduling",
+      description: "AI-powered booking that prevents all conflicts"
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "Secure Tokens",
+      description: "Digital session tokens for every booking"
+    },
+    {
+      icon: <Zap className="w-6 h-6" />,
+      title: "Instant Booking",
+      description: "Book a session in under 60 seconds"
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "1-on-1 Learning",
+      description: "Personalized attention for better results"
+    },
+    {
+      icon: <TrendingUp className="w-6 h-6" />,
+      title: "Track Progress",
+      description: "Monitor your learning journey with insights"
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Engineering Student",
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+      text: "MediQueue helped me find the perfect tutor for my exams. The booking process is so easy!",
+      rating: 5
+    },
+    {
+      name: "Michael Chen",
+      role: "High School Student",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+      text: "The tutors are amazing and very supportive. My concepts are now much clearer.",
+      rating: 5
+    },
+    {
+      name: "Emma Davis",
+      role: "College Student",
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
+      text: "Finally a platform that makes tutor booking simple and efficient. Highly recommended!",
+      rating: 5
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
   return (
-    <section ref={containerRef} className="relative min-h-screen w-full overflow-hidden bg-[#f8f7ff]">
-      
-      {/* ===== FULL WIDTH COVER IMAGE BACKGROUND ===== */}
-      <motion.div 
-        className="absolute inset-0 w-full h-full"
-        style={{ y: smoothY, scale }}
-      >
-        {/* Main background image - full width cover */}
-        <div className="absolute inset-0 w-full h-full">
-          <Image
-            src="/images/hero-bg.jpg"
-            alt="Background"
-            fill
-            className="object-cover object-center"
-            priority
-            quality={90}
-          />
-          {/* Gradient overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#f8f7ff] via-[#f8f7ff]/95 to-[#f8f7ff]/40" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f8f7ff]" />
-        </div>
+    <div className="min-h-screen bg-[#f8fafc] relative overflow-hidden">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-indigo-100/50 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-100/50 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/30 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle,#e2e8f0_1px,transparent_1px)] bg-[size:24px_24px] opacity-40" />
+      </div>
 
-        {/* Animated background shapes */}
-        <motion.div 
-          className="absolute top-20 right-[15%] w-72 h-72 bg-purple-200/40 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute bottom-32 left-[10%] w-96 h-96 bg-blue-200/30 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute top-1/2 right-[5%] w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl"
-          animate={{ 
-            x: [0, 30, 0],
-            y: [0, -20, 0]
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </motion.div>
-
-      {/* ===== MAIN CONTENT ===== */}
-      <motion.div 
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28 lg:pt-32 pb-8"
-        style={{ opacity }}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center min-h-[70vh]">
-          
+      {/* Hero Section with Slider */}
+      <section className="relative z-10 container mx-auto px-6 py-12 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
-          <motion.div 
-            className="relative z-10 max-w-xl"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {/* Badge */}
-            <motion.div 
-              className="inline-flex items-center px-5 py-2.5 bg-white/80 backdrop-blur-md rounded-full mb-8 shadow-sm border border-purple-100"
-              variants={fadeInUp}
-              custom={0}
-            >
-              <motion.span 
-                className="w-2 h-2 bg-purple-500 rounded-full mr-2"
-                animate={{ scale: [1, 1.5, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span className="text-sm font-semibold text-purple-700">Learn With Experts</span>
-            </motion.div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-indigo-100 shadow-sm mb-6">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span className="text-sm font-medium text-slate-700">Trusted by 10K+ Students</span>
+            </div>
 
-            {/* Heading with character animation */}
-            <motion.h1 
-              className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-gray-900 leading-[1.1] mb-6"
-              variants={fadeInUp}
-              custom={1}
-            >
-              Find The Perfect Tutor
-              <br />
-              <motion.span 
-                className="text-[#4f46e5] inline-block"
-                animate={{ 
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-                }}
-                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                style={{
-                  background: "linear-gradient(90deg, #4f46e5, #7c3aed, #4f46e5)",
-                  backgroundSize: "200% auto",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text"
-                }}
-              >
-                Book & Learn Smarter
-              </motion.span>
-            </motion.h1>
-
-            {/* Description */}
-            <motion.p 
-              className="text-base sm:text-lg text-gray-500 leading-relaxed mb-10 max-w-lg"
-              variants={fadeInUp}
-              custom={2}
-            >
-              MediQueue connects you with expert tutors for personalized online learning. 
-              Book sessions, get digital tokens & learn without schedule conflicts.
-            </motion.p>
-
-            {/* CTA Buttons */}
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4 mb-12"
-              variants={fadeInUp}
-              custom={3}
-            >
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Link 
-                  href="/tutors"
-                  className="group inline-flex items-center justify-center px-8 py-4 bg-[#4f46e5] text-white font-bold rounded-xl hover:bg-[#4338ca] transition-colors duration-300 shadow-lg shadow-indigo-500/25"
-                >
-                  Browse Tutors
-                  <motion.span
-                    className="ml-2"
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    <FaArrowRight className="w-4 h-4" />
-                  </motion.span>
-                </Link>
-              </motion.div>
-              
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Link 
-                  href="/become-tutor"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white/80 backdrop-blur-sm text-[#4f46e5] font-bold rounded-xl border-2 border-[#4f46e5]/20 hover:border-[#4f46e5] hover:bg-white transition-all duration-300"
-                >
-                  Become a Tutor
-                </Link>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Content - Image & Floating Cards */}
-          <motion.div 
-            className="relative hidden lg:block h-[500px]"
-            variants={slideInRight}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Main hero image */}
-            <motion.div 
-              className="relative z-10 w-full h-full"
-              animate={floatAnimation}
-            >
-              <Image
-                src="/images/hero-student.png"
-                alt="Student learning online"
-                fill
-                className="object-contain object-center"
-                priority
-              />
-            </motion.div>
-
-            {/* Floating feature cards */}
-            <FloatingCard 
-              icon={FaVideo} 
-              title="Live Classes" 
-              subtitle="Interactive Learning" 
-              color="bg-blue-500" 
-              delay={0.8}
-              position="top-[5%] right-[10%]"
-            />
-            <FloatingCard 
-              icon={FaShieldAlt} 
-              title="Digital Token" 
-              subtitle="Secure & Unique" 
-              color="bg-teal-500" 
-              delay={1.2}
-              position="top-[32%] left-[0%]"
-            />
-            <FloatingCard 
-              icon={FaClock} 
-              title="Smart Booking" 
-              subtitle="No Conflicts" 
-              color="bg-purple-500" 
-              delay={1.6}
-              position="bottom-[15%] left-[5%]"
-            />
-
-            {/* Decorative dots */}
-            <motion.div 
-              className="absolute top-16 right-20 w-3 h-3 bg-purple-400 rounded-full"
-              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-            <motion.div 
-              className="absolute bottom-32 left-16 w-2 h-2 bg-blue-400 rounded-full"
-              animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 4, repeat: Infinity, delay: 1 }}
-            />
-            <motion.div 
-              className="absolute top-1/2 right-0 w-2.5 h-2.5 bg-indigo-400 rounded-full"
-              animate={{ y: [0, -15, 0], opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 5, repeat: Infinity }}
-            />
-          </motion.div>
-        </div>
-
-        {/* Slider Navigation */}
-        <motion.div 
-          className="flex items-center justify-between mt-8 lg:mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 0.5 }}
-        >
-          <div className="flex gap-3">
-            <motion.button 
-              onClick={() => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides)}
-              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-gray-600 hover:text-[#4f46e5] hover:shadow-xl transition-all duration-200 border border-gray-100"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Previous slide"
-            >
-              <FaChevronLeft className="w-4 h-4" />
-            </motion.button>
-            <motion.button 
-              onClick={() => setCurrentSlide((prev) => (prev + 1) % totalSlides)}
-              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center text-gray-600 hover:text-[#4f46e5] hover:shadow-xl transition-all duration-200 border border-gray-100"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Next slide"
-            >
-              <FaChevronRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-
-          <div className="flex gap-2">
-            {Array.from({ length: totalSlides }).map((_, index) => (
-              <motion.button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`h-2.5 rounded-full transition-all duration-500 ${
-                  currentSlide === index 
-                    ? "bg-[#4f46e5] w-8" 
-                    : "bg-gray-300 w-2.5 hover:bg-gray-400"
-                }`}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* ===== STATS BAR ===== */}
-        <motion.div 
-          className="mt-12 bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/60 p-6 sm:p-8"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, duration: 0.7, ease: "easeOut" }}
-        >
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {stats.map((stat, index) => (
-              <motion.div 
-                key={index} 
-                className="flex items-center gap-4"
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlide}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.8 + index * 0.1, duration: 0.5 }}
-                whileHover={{ scale: 1.02 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
               >
-                <motion.div 
-                  className={`w-14 h-14 ${stat.iconBg} rounded-2xl flex items-center justify-center flex-shrink-0`}
-                  whileHover={{ rotate: 10, scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 mb-4 leading-tight">
+                  {slides[currentSlide].title},{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+                    {slides[currentSlide].subtitle}
+                  </span>
+                </h1>
+                <p className="text-lg text-slate-500 mb-8 leading-relaxed max-w-lg">
+                  {slides[currentSlide].description}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex flex-wrap gap-4 mb-10">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  onPress={() => router.push("/register")}
+                  className=" px-8 py-10 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 hover:shadow-2xl transition-all text-lg"
                 >
-                  <stat.icon className={`w-7 h-7 ${stat.iconColor}`} />
-                </motion.div>
-                <div>
-                  <p className="text-2xl font-extrabold text-gray-900">
-                    <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-                  </p>
-                  <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
+                  Get Started Free
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-2xl shadow-md hover:shadow-lg transition-all"
+              >
+                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center">
+                  <Play className="w-4 h-4 text-indigo-600 ml-0.5" />
                 </div>
+                Watch Demo
+              </motion.button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-8">
+              {[
+                { value: "10K+", label: "Students" },
+                { value: "1K+", label: "Expert Tutors" },
+                { value: "20K+", label: "Sessions Booked" },
+                { value: "98%", label: "Satisfaction" }
+              ].map((stat, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                  <div className="text-sm text-slate-500">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex gap-2 mt-8">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 ${idx === currentSlide
+                      ? 'w-8 bg-indigo-600'
+                      : 'w-2 bg-slate-300 hover:bg-slate-400'
+                    }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Right Image */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative"
+          >
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200/50">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentSlide}
+                  src={slides[currentSlide].image}
+                  alt="Hero"
+                  className="w-full h-[500px] object-cover"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.7 }}
+                />
+              </AnimatePresence>
+
+              {/* Overlay Card */}
+              <div className="absolute bottom-6 left-6 right-6">
+                <Card className="bg-white/90 backdrop-blur-xl border border-white/20 p-4 shadow-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                      <Award className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-900">Session Token</div>
+                      <div className="text-sm text-slate-500">MQ-7856-34DF • Your Session Token</div>
+                    </div>
+                    <CheckCircle2 className="w-6 h-6 text-green-500 ml-auto" />
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+            {/* Floating Elements */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-400 rounded-2xl shadow-xl flex items-center justify-center text-white font-bold text-lg"
+            >
+              4.9
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="relative z-10 container mx-auto px-6 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+            Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">MediQueue?</span>
+          </h2>
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+            We make learning simple, effective and hassle-free for everyone.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ y: -5 }}
+            >
+              <Card className="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300 h-full">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-5">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                <p className="text-slate-500 leading-relaxed">{feature.description}</p>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="relative z-10 container mx-auto px-6 py-20">
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-12 lg:p-16 text-white overflow-hidden relative">
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+          <div className="relative z-10 text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">How It Works</h2>
+            <p className="text-indigo-100 text-lg">Get started in three simple steps</p>
+          </div>
+
+          <div className="relative z-10 grid md:grid-cols-3 gap-8">
+            {[
+              { step: "01", title: "Create Account", desc: "Sign up in seconds with email or Google" },
+              { step: "02", title: "Find Tutor", desc: "Browse and filter by subject, price, and availability" },
+              { step: "03", title: "Book Session", desc: "Get your digital token and start learning" }
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.2 }}
+                className="text-center"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
+                  {item.step}
+                </div>
+                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                <p className="text-indigo-100">{item.desc}</p>
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="relative z-10 container mx-auto px-6 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+            What Our Students Say
+          </h2>
+          <p className="text-slate-500 text-lg">Real feedback from real learners</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {testimonials.map((testimonial, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Card className="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all h-full">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-slate-600 mb-6 leading-relaxed">"{testimonial.text}"</p>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <div className="font-semibold text-slate-900">{testimonial.name}</div>
+                    <div className="text-sm text-slate-500">{testimonial.role}</div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative z-10 container mx-auto px-6 py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-12 lg:p-16 text-center text-white overflow-hidden relative"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+              Ready to Start Your Learning Journey?
+            </h2>
+            <p className="text-slate-300 text-lg mb-8">
+              Join thousands of students learning with expert tutors on MediQueue.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button
+                onPress={() => router.push("/register")}
+                className="px-8 py-4 bg-white text-slate-900 font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all text-lg"
+              >
+                Get Started Free
+                <ChevronRight className="w-5 h-5 ml-1" />
+              </Button>
+              <Button
+                onPress={() => router.push("/tutors")}
+                variant="bordered"
+                className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-2xl hover:bg-white/10 transition-all text-lg"
+              >
+                Browse Tutors
+              </Button>
+            </div>
+          </div>
         </motion.div>
-      </motion.div>
-    </section>
+      </section>
+
+    </div>
   );
 };
 
-export default HeroSection;
+export default Hero;
