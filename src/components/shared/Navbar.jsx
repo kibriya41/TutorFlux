@@ -15,10 +15,8 @@ import {
   GraduationCap,
   Moon,
   Sun,
-  Bell,
-  Search,
 } from "lucide-react";
-import { Avatar, Badge, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
+import { Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ─── NavLink Component ─── */
@@ -38,7 +36,6 @@ const NavLink = ({ href, children, icon: Icon }) => {
       {Icon && <Icon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"}`} />}
       <span>{children}</span>
       
-      {/* Active Indicator */}
       {isActive && (
         <motion.div
           layoutId="navbar-indicator"
@@ -76,31 +73,27 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState("light");
-  const [notifications] = useState(3); // Demo notification count
-  const [user] = useState(null); // Set to user object when logged in
+  const [user] = useState(null);
 
-  // Scroll detection for glass effect
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Theme toggle
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
-  // Initialize theme
   useEffect(() => {
     if (document.documentElement.classList.contains("dark")) setTheme("dark");
   }, []);
 
   const navLinks = [
     { href: "/", label: "Home", icon: null },
-    { href: "/tutors", label: "Tutors", icon: Search },
+    { href: "/tutors", label: "Tutors", icon: null },
     { href: "/add-tutor", label: "Add Tutor", icon: PlusCircle },
     { href: "/my-tutors", label: "My Tutors", icon: GraduationCap },
     { href: "/my-booked-sessions", label: "Booked", icon: CalendarCheck },
@@ -121,7 +114,7 @@ const Navbar = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             
-            {/* ═══ Logo ═══ */}
+            {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
               <motion.div
                 whileHover={{ rotate: 5, scale: 1.05 }}
@@ -140,7 +133,7 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* ═══ Desktop Navigation ═══ */}
+            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
                 <NavLink key={link.href} href={link.href} icon={link.icon}>
@@ -149,7 +142,7 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* ═══ Right Side Actions ═══ */}
+            {/* Right Side Actions */}
             <div className="flex items-center gap-2">
               {/* Theme Toggle */}
               <motion.button
@@ -183,26 +176,8 @@ const Navbar = () => {
                 </AnimatePresence>
               </motion.button>
 
-              {/* Notifications */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <Bell className="w-5 h-5" />
-                {notifications > 0 && (
-                  <Badge
-                    content={notifications}
-                    color="danger"
-                    size="sm"
-                    className="absolute -top-1 -right-1"
-                  />
-                )}
-              </motion.button>
-
               {/* Auth Section */}
               {user ? (
-                /* Logged In - Profile Dropdown */
                 <Dropdown>
                   <DropdownTrigger>
                     <button className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -232,7 +207,6 @@ const Navbar = () => {
                   </DropdownMenu>
                 </Dropdown>
               ) : (
-                /* Not Logged In - Auth Buttons */
                 <div className="hidden sm:flex items-center gap-2 ml-2">
                   <Link
                     href="/login"
@@ -263,7 +237,7 @@ const Navbar = () => {
         </div>
       </motion.nav>
 
-      {/* ═══ Mobile Menu ═══ */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div

@@ -583,9 +583,9 @@ const TutorsPage = () => {
                           exit={{ opacity: 0, y: 20 }}
                           className="absolute bottom-4 left-4 right-4 flex gap-2"
                         >
-                          <button className="flex-1 py-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl text-sm font-medium text-gray-800 dark:text-white hover:bg-white transition-colors flex items-center justify-center gap-2">
+                          <Link href={`/tutors/${tutor._id}`} className="flex-1 py-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl text-sm font-medium text-gray-800 dark:text-white hover:bg-white transition-colors flex items-center justify-center gap-2">
                             <Eye className="w-4 h-4" /> Quick View
-                          </button>
+                          </Link>
                           <button className="w-10 h-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl flex items-center justify-center hover:bg-white transition-colors">
                             <Share2 className="w-4 h-4 text-gray-600" />
                           </button>
@@ -627,7 +627,7 @@ const TutorsPage = () => {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
                         <Clock3 className="w-4 h-4 text-violet-500 shrink-0" />
-                        <span className="truncate">{tutor.experience || "0"} yrs exp.</span>
+                        <span className="truncate">{tutor.institutionExperience || "0"} yrs exp.</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
                         <CalendarDays className="w-4 h-4 text-violet-500 shrink-0" />

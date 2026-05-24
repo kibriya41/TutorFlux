@@ -10,6 +10,9 @@ import {
     AlertCircle, GraduationCap, Globe
 } from "lucide-react";
 
+// Better Auth Client
+import { authClient } from "@/lib/auth-client";
+
 const LoginPage = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -54,18 +57,40 @@ const LoginPage = () => {
         return true;
     };
 
-    const handleGoogleSignIn = () => {
-        toast.success("Google Sign In initiated", {
-            style: {
-                borderRadius: '16px',
-                background: isDark ? '#064e3b' : '#f0fdf4',
-                border: isDark ? '1px solid #059669' : '1px solid #bbf7d0',
-                color: isDark ? '#6ee7b7' : '#166534',
-                padding: '16px 20px',
+    // Better Auth: Google Sign In (Social Provider)
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        await authClient.signIn.social({
+            provider: "google",
+            callbackURL: "/",
+        }, {
+            onRequest: () => {
+                toast.success("Redirecting to Google...", {
+                    style: {
+                        borderRadius: '16px',
+                        background: isDark ? '#064e3b' : '#f0fdf4',
+                        border: isDark ? '1px solid #059669' : '1px solid #bbf7d0',
+                        color: isDark ? '#6ee7b7' : '#166534',
+                        padding: '16px 20px',
+                    }
+                });
+            },
+            onError: (ctx) => {
+                setLoading(false);
+                toast.error(ctx.error.message || "Google sign in failed", {
+                    style: {
+                        borderRadius: '16px',
+                        background: isDark ? '#1a1a2e' : '#fef2f2',
+                        border: isDark ? '1px solid #7f1d1d' : '1px solid #fecaca',
+                        color: isDark ? '#fca5a5' : '#991b1b',
+                        padding: '16px 20px',
+                    }
+                });
             }
         });
     };
 
+    // Better Auth: Email/Password Sign In
     const onSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -83,69 +108,59 @@ const LoginPage = () => {
             return;
         }
 
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/login`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json'
+        // Use Better Auth's type-safe signIn.email method
+        await authClient.signIn.email(
+            {
+                email,
+                password,
+                callbackURL: "/",
+                rememberMe: true,
+            },
+            {
+                onRequest: () => {
+                    // Loading state already set above
                 },
-                body: JSON.stringify({ email, password })
-            });
+                onSuccess: () => {
+                    toast.success(
+                        <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isDark ? 'bg-green-900/50' : 'bg-green-100'}`}>
+                                <ArrowRight className={`w-3 h-3 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                            </div>
+                            <div>
+                                <p className={`font-semibold ${isDark ? 'text-green-200' : 'text-green-800'}`}>Welcome back!</p>
+                                <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>Login successful</p>
+                            </div>
+                        </div>,
+                        {
+                            duration: 2000,
+                            style: {
+                                borderRadius: '16px',
+                                background: isDark ? '#064e3b' : '#f0fdf4',
+                                border: isDark ? '1px solid #059669' : '1px solid #bbf7d0',
+                                color: isDark ? '#6ee7b7' : '#166534',
+                                padding: '16px 20px',
+                            }
+                        }
+                    );
 
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.setItem('token', data.token);
-                
-                toast.success(
-                    <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isDark ? 'bg-green-900/50' : 'bg-green-100'}`}>
-                            <ArrowRight className={`w-3 h-3 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                        </div>
-                        <div>
-                            <p className={`font-semibold ${isDark ? 'text-green-200' : 'text-green-800'}`}>Welcome back!</p>
-                            <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>Login successful</p>
-                        </div>
-                    </div>,
-                    {
-                        duration: 2000,
+                    setTimeout(() => {
+                        router.push("/");
+                    }, 1000);
+                },
+                onError: (ctx) => {
+                    setLoading(false);
+                    toast.error(ctx.error.message || "Invalid email or password", {
                         style: {
                             borderRadius: '16px',
-                            background: isDark ? '#064e3b' : '#f0fdf4',
-                            border: isDark ? '1px solid #059669' : '1px solid #bbf7d0',
-                            color: isDark ? '#6ee7b7' : '#166534',
+                            background: isDark ? '#1a1a2e' : '#fef2f2',
+                            border: isDark ? '1px solid #7f1d1d' : '1px solid #fecaca',
+                            color: isDark ? '#fca5a5' : '#991b1b',
                             padding: '16px 20px',
                         }
-                    }
-                );
-
-                setTimeout(() => {
-                    router.push("/");
-                }, 1000);
-            } else {
-                toast.error(data.message || "Invalid email or password", {
-                    style: {
-                        borderRadius: '16px',
-                        background: isDark ? '#1a1a2e' : '#fef2f2',
-                        border: isDark ? '1px solid #7f1d1d' : '1px solid #fecaca',
-                        color: isDark ? '#fca5a5' : '#991b1b',
-                        padding: '16px 20px',
-                    }
-                });
+                    });
+                },
             }
-        } catch (error) {
-            toast.error("Connection error. Please try again.", {
-                style: {
-                    borderRadius: '16px',
-                    background: isDark ? '#1a1a2e' : '#fef2f2',
-                    border: isDark ? '1px solid #7f1d1d' : '1px solid #fecaca',
-                    color: isDark ? '#fca5a5' : '#991b1b',
-                    padding: '16px 20px',
-                }
-            });
-        } finally {
-            setLoading(false);
-        }
+        );
     };
 
     // Dynamic theme classes
@@ -210,7 +225,8 @@ const LoginPage = () => {
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                                 onClick={handleGoogleSignIn}
-                                className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold transition-all shadow-sm ${themeClasses.googleBtn}`}
+                                disabled={loading}
+                                className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold transition-all shadow-sm ${themeClasses.googleBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <Globe className="w-5 h-5 text-blue-500" />
                                 Continue with Google
@@ -321,4 +337,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;   
+export default LoginPage;
