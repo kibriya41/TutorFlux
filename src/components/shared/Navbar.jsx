@@ -73,22 +73,26 @@ const Navbar = () => {
 
               Add Tutor
             </NavLink>
+            {user ? <>
+              <NavLink
+                href="/my-tutors"
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
+              >
 
-            <NavLink
-              href="/my-tutors"
-              className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-            >
+                My Tutors
+              </NavLink>
 
-              My Tutors
-            </NavLink>
+              <NavLink
+                href="/booked"
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
+              >
 
-            <NavLink
-              href="/booked"
-              className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-            >
+                Booked
+              </NavLink>
+            </> :
+              <>
+              </>}
 
-              Booked
-            </NavLink>
           </div>
 
           {/* Right Side */}
@@ -109,7 +113,7 @@ const Navbar = () => {
             {
               user ?
                 <>
-                <CustomTrigger/>
+                  <CustomTrigger />
                 </>
                 :
                 <>

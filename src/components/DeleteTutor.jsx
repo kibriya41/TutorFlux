@@ -2,6 +2,7 @@
 
 import { TrashBin } from "@gravity-ui/icons";
 import { AlertDialog, Button } from "@heroui/react";
+import { redirect } from "next/navigation";
 
 export function DeleteTutor({ tutor }) {
 
@@ -27,6 +28,7 @@ export function DeleteTutor({ tutor }) {
         }
 
         const data = await res.json();
+        redirect("/tutors")
         console.log(data);
     }
 
