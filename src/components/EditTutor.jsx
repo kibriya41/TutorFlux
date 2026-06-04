@@ -5,6 +5,8 @@ import { Edit3 } from 'lucide-react';
 import { Button, Input } from '@heroui/react';
 import { useState } from 'react';
 
+import { toast } from 'react-hot-toast';
+
 export function EditTutor({ tutor, onUpdate }) {
   const {
     _id,
@@ -33,10 +35,12 @@ export function EditTutor({ tutor, onUpdate }) {
       const formData = new FormData(e.currentTarget);
       const updatedTutor = Object.fromEntries(formData.entries());
 
+      const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:7000/tutor/${_id}`, {
         method: 'PATCH',
         headers: {
           'content-type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updatedTutor),
       });
@@ -44,11 +48,17 @@ export function EditTutor({ tutor, onUpdate }) {
       const data = await res.json();
       console.log(data);
 
-      setIsOpen(false);
-      onUpdate?.();
+      if (res.ok) {
+        toast.success("Tutor profile updated successfully!");
+        setIsOpen(false);
+        onUpdate?.();
+      } else {
+        toast.error(data.message || "Failed to update tutor profile");
+      }
 
     } catch (error) {
       console.error('Failed to update tutor:', error);
+      toast.error("An error occurred while updating.");
     } finally {
       setIsPending(false);
     }

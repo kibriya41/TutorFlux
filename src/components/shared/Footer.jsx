@@ -200,12 +200,12 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-4 mb-6 md:mb-0 pb-6 md:pb-0 border-b border-gray-800/50 md:border-none">
             <Link href="/" className="flex items-center gap-3 mb-6 group">
-              <motion.div
+              <motion.img
                 whileHover={{ rotate: 5, scale: 1.05 }}
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30"
-              >
-                <BookOpen className="w-5 h-5" />
-              </motion.div>
+                src="/logo.png"
+                alt="TutorFlux"
+                className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-blue-500/30"
+              />
               <div>
                 <span className="text-xl font-bold text-white tracking-tight">
                   Tutor<span className="text-blue-500">Flux</span>

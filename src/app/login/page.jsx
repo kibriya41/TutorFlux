@@ -120,7 +120,21 @@ const LoginPage = () => {
                 onRequest: () => {
                     // Loading state already set above
                 },
-                onSuccess: () => {
+                onSuccess: async () => {
+                    try {
+                        const tokenRes = await fetch("http://localhost:7000/jwt", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email }),
+                        });
+                        const tokenData = await tokenRes.json();
+                        if (tokenData.token) {
+                            localStorage.setItem("token", tokenData.token);
+                        }
+                    } catch (err) {
+                        console.error("JWT creation failed on login", err);
+                    }
+
                     toast.success(
                         <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isDark ? 'bg-green-900/50' : 'bg-green-100'}`}>
@@ -203,9 +217,7 @@ const LoginPage = () => {
                     className="text-center mb-8"
                 >
                     <div className={`inline-flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-sm mb-6 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-indigo-100'}`}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-                            <GraduationCap className="w-6 h-6 text-white" />
-                        </div>
+                        <img src="/logo.png" alt="TutorFlux" className="w-10 h-10 rounded-xl object-cover" />
                         <span className={`text-xl font-bold ${themeClasses.textPrimary}`}>TutorFlux</span>
                     </div>
                     <h1 className={`text-3xl font-bold mb-2 ${themeClasses.textPrimary}`}>Welcome Back</h1>

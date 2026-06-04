@@ -11,9 +11,12 @@ import {
   FileText, Sparkles, ChevronDown, Check, X, UploadCloud,
   GraduationCap, Award, Star, Zap, ArrowRight, AlertCircle
 } from "lucide-react";
-
+import { authClient } from "@/lib/auth-client";
 const AddTutorPage = () => {
   const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
   const [previewImage, setPreviewImage] = useState("");
@@ -30,6 +33,14 @@ const AddTutorPage = () => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     return () => observer.disconnect();
   }, []);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isPending && !session) {
+      toast.error("Please sign in to add a tutor profile.");
+      router.push("/login");
+    }
+  }, [session, isPending, router]);
 
   const [formValues, setFormValues] = useState({
     tutorName: "",
@@ -140,29 +151,47 @@ const AddTutorPage = () => {
       setActiveSection(prev => prev + 1);
     }
   };
-
   const onSubmit = async (e) => {
     e.preventDefault();
-    const tutor = formValues;
+    const token = localStorage.getItem("token");
+    const tutor = {
+      ...formValues,
+      email: user?.email
+    };
     console.log(tutor);
 
-    const res = await fetch('http://localhost:7000/tutor', {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(tutor)
-    });
-    const data = await res.json();
-    console.log(data);
-    toast.success("Tutor profile created successfully!", {
-      style: {
-        borderRadius: '16px',
-        background: isDark ? '#064e3b' : '#f0fdf4',
-        border: isDark ? '1px solid #059669' : '1px solid #86efac',
-        color: isDark ? '#6ee7b7' : '#166534',
-        padding: '16px 20px'
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:7000/tutor', {
+        method: "POST",
+        headers: { 
+          "content-type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(tutor)
+      });
+      const data = await res.json();
+      console.log(data);
+      if (res.ok) {
+        toast.success("Tutor profile created successfully!", {
+          style: {
+            borderRadius: '16px',
+            background: isDark ? '#064e3b' : '#f0fdf4',
+            border: isDark ? '1px solid #059669' : '1px solid #86efac',
+            color: isDark ? '#6ee7b7' : '#166534',
+            padding: '16px 20px'
+          }
+        });
+        router.push("/my-tutors");
+      } else {
+        toast.error(data.message || "Failed to create tutor profile");
       }
-    });
-    router.push("/my-tutors");
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Dynamic classes based on dark mode
@@ -183,6 +212,23 @@ const AddTutorPage = () => {
     previewBg: isDark ? "bg-gray-800/50 border-gray-700" : "bg-slate-50 border-slate-200",
     buttonSecondary: isDark ? "text-gray-400 hover:text-gray-200" : "text-slate-500 hover:text-slate-700"
   };
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0a0e1a] flex flex-col items-center justify-center gap-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 rounded-full"
+        />
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Checking authentication...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
 
   return (
     <div className={`min-h-screen ${themeClasses.pageBg} relative overflow-hidden transition-colors duration-500`}>

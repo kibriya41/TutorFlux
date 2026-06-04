@@ -110,9 +110,8 @@ const RegisterPage = () => {
           },
           onSuccess: () => {
             setLoading(false);
-            toast.success("Registration successful! Welcome to MediQueue.");
-            router.push("/");
-            router.refresh(); // Refresh to update auth state
+            toast.success("Registration successful! Welcome to TutorFlux. Please log in.");
+            router.push("/login");
           },
           onError: (ctx) => {
             setLoading(false);
@@ -168,14 +167,12 @@ const RegisterPage = () => {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#6366f1] text-white mb-4 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30">
-            <GraduationCap className="w-7 h-7" />
-          </div>
+          <img src="/logo.png" alt="TutorFlux" className="w-14 h-14 rounded-2xl object-cover shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 mb-4 mx-auto" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Create Account
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Join MediQueue and start learning
+            Join TutorFlux and start learning
           </p>
         </div>
 
