@@ -61,9 +61,9 @@ const TutorDetailPage = ({ params }) => {
   useEffect(() => {
     if (!isPending && !session) {
       toast.error("Please sign in to view tutor details.");
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/tutors/${id}`)}`);
     }
-  }, [session, isPending, router]);
+  }, [session, isPending, router, id]);
 
   // Auto fill booking fields once session is loaded
   useEffect(() => {

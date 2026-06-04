@@ -41,7 +41,7 @@ const MyTutorsPage = () => {
   useEffect(() => {
     if (!isPending && !session) {
       toast.error("Please sign in to view your tutors.");
-      router.push("/login");
+      router.push("/login?callbackUrl=%2Fmy-tutors");
     }
   }, [session, isPending, router]);
 

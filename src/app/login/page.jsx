@@ -18,6 +18,16 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [isDark, setIsDark] = useState(false);
+    const [callbackUrl, setCallbackUrl] = useState("/");
+
+    // Read and sanitize the callbackUrl from query params (client-side only)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get("callbackUrl") || "/";
+        // Sanitize: must start with "/" but not "//" (prevents open redirect)
+        const safe = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+        setCallbackUrl(safe);
+    }, []);
 
     // Auto-detect dark mode from Navbar toggle
     useEffect(() => {
@@ -62,7 +72,7 @@ const LoginPage = () => {
         setLoading(true);
         await authClient.signIn.social({
             provider: "google",
-            callbackURL: "/",
+            callbackURL: callbackUrl,
         }, {
             onRequest: () => {
                 toast.success("Redirecting to Google...", {
@@ -113,7 +123,7 @@ const LoginPage = () => {
             {
                 email,
                 password,
-                callbackURL: "/",
+                callbackURL: callbackUrl,
                 rememberMe: true,
             },
             {
@@ -158,7 +168,7 @@ const LoginPage = () => {
                     );
 
                     setTimeout(() => {
-                        router.push("/");
+                        router.push(callbackUrl);
                     }, 1000);
                 },
                 onError: (ctx) => {

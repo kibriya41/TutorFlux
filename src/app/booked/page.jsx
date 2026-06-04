@@ -41,7 +41,7 @@ const BookedSessionsPage = () => {
   useEffect(() => {
     if (!isPending && !session) {
       toast.error("Please sign in to view your booked sessions.");
-      router.push("/login");
+      router.push("/login?callbackUrl=%2Fbooked");
     }
   }, [session, isPending, router]);
 

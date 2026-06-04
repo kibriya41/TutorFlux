@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Moon,
@@ -14,8 +15,15 @@ import { CustomTrigger } from "./CustomTrigger";
 const Navbar = () => {
   const { data: session } = authClient.useSession();
   const user = session?.user;
+  const pathname = usePathname();
 
   const [darkMode, setDarkMode] = useState(false);
+
+  // Build the login URL with a callbackUrl so the user returns here after signing in
+  const loginHref =
+    pathname && pathname !== "/login" && pathname !== "/register"
+      ? `/login?callbackUrl=${encodeURIComponent(pathname)}`
+      : "/login";
 
   // Sync theme with localStorage and classList on mount and changes
   useEffect(() => {
@@ -147,7 +155,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Link
-                  href="/login"
+                  href={loginHref}
                   className="text-gray-700 dark:text-gray-300 hover:text-blue-600 font-medium transition"
                 >
                   Sign In

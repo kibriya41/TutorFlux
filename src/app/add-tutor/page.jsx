@@ -38,7 +38,7 @@ const AddTutorPage = () => {
   useEffect(() => {
     if (!isPending && !session) {
       toast.error("Please sign in to add a tutor profile.");
-      router.push("/login");
+      router.push("/login?callbackUrl=%2Fadd-tutor");
     }
   }, [session, isPending, router]);
 
