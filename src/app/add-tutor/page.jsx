@@ -162,7 +162,7 @@ const AddTutorPage = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:7000/tutor', {
+      const res = await fetch('https://tutorflux-serve-2.onrender.com/tutor', {
         method: "POST",
         headers: { 
           "content-type": "application/json",

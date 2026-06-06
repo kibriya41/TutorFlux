@@ -132,7 +132,7 @@ const LoginPage = () => {
                 },
                 onSuccess: async () => {
                     try {
-                        const tokenRes = await fetch("http://localhost:7000/jwt", {
+                        const tokenRes = await fetch("https://tutorflux-serve-2.onrender.com/jwt", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ email }),

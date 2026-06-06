@@ -36,7 +36,7 @@ export function EditTutor({ tutor, onUpdate }) {
       const updatedTutor = Object.fromEntries(formData.entries());
 
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:7000/tutor/${_id}`, {
+      const res = await fetch(`https://tutorflux-serve-2.onrender.com/tutor/${_id}`, {
         method: 'PATCH',
         headers: {
           'content-type': 'application/json',

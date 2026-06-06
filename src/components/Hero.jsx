@@ -11,6 +11,7 @@ import {
   Loader2, MapPin, Clock3, Eye, Share2
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 // Animated counter component
 function AnimatedCounter({ target, suffix = "", duration = 2 }) {
@@ -74,7 +75,7 @@ const Hero = () => {
       try {
         setTutorsLoading(true);
         setTutorsError(null);
-        const response = await fetch("http://localhost:7000/tutor");
+        const response = await fetch("https://tutorflux-serve-2.onrender.com/tutor");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -304,11 +305,10 @@ const Hero = () => {
                 <button
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
-                  className={`h-2 rounded-full transition-all duration-500 flex items-center gap-2 ${
-                    idx === currentSlide
+                  className={`h-2 rounded-full transition-all duration-500 flex items-center gap-2 ${idx === currentSlide
                       ? 'w-10 bg-gradient-to-r from-blue-600 to-indigo-600'
                       : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600'
-                  }`}
+                    }`}
                 >
                   {idx === currentSlide && slide.icon}
                 </button>
@@ -555,7 +555,7 @@ const Hero = () => {
                           animate={{ scale: hoveredCard === (tutor._id || tutor.id || idx) ? 1.08 : 1 }}
                           transition={{ duration: 0.6 }}
                         />
-                        
+
                         {/* Overlay Gradient */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -580,11 +580,10 @@ const Hero = () => {
                           className="absolute top-4 right-4 w-10 h-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg"
                         >
                           <Heart
-                            className={`w-5 h-5 transition-colors ${
-                              favorites.has(tutor._id || tutor.id || idx)
+                            className={`w-5 h-5 transition-colors ${favorites.has(tutor._id || tutor.id || idx)
                                 ? "fill-rose-500 text-rose-500"
                                 : "text-gray-500 hover:text-rose-500"
-                            }`}
+                              }`}
                           />
                         </motion.button>
 
@@ -597,9 +596,9 @@ const Hero = () => {
                               exit={{ opacity: 0, y: 20 }}
                               className="absolute bottom-4 left-4 right-4 flex gap-2"
                             >
-                              <button className="flex-1 py-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl text-sm font-medium text-gray-800 dark:text-white hover:bg-white transition-colors flex items-center justify-center gap-2">
+                              <Link href={`/tutors/${tutor._id}`} className="flex-1 py-2.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl text-sm font-medium text-gray-800 dark:text-white hover:bg-white transition-colors flex items-center justify-center gap-2">
                                 <Eye className="w-4 h-4" /> Quick View
-                              </button>
+                              </Link>
                               <button className="w-10 h-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl flex items-center justify-center hover:bg-white transition-colors">
                                 <Share2 className="w-4 h-4 text-gray-600" />
                               </button>
@@ -665,23 +664,24 @@ const Hero = () => {
                             <div className="flex items-center gap-1 mt-1">
                               <Zap className="w-3 h-3 text-emerald-500" />
                               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                                {parseInt(getTutorField(tutor, "totalSlot", "slots", "availableSlots")) > 0 
-                                  ? `${getTutorField(tutor, "totalSlot", "slots", "availableSlots")} slots left` 
+                                {parseInt(getTutorField(tutor, "totalSlot", "slots", "availableSlots")) > 0
+                                  ? `${getTutorField(tutor, "totalSlot", "slots", "availableSlots")} slots left`
                                   : "Fully Booked"
                                 }
                               </span>
                             </div>
                           </div>
 
-                          <motion.button
-                            whileHover={{ scale: 1.05, x: 3 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => router.push(`/tutors/${tutor._id || tutor.id || ""}`)}
-                            className="px-6 h-11 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-sm font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all flex items-center gap-2 group/btn"
-                          >
-                            Book Now
-                            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                          </motion.button>
+                          <Link href={`/tutors/${tutor._id}`}>
+                            <motion.button
+                              whileHover={{ scale: 1.05, x: 3 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-6 h-11 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-sm font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all flex items-center gap-2 group/btn"
+                            >
+                              Book Now
+                              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                            </motion.button>
+                          </Link>
                         </div>
                       </div>
                     </Card>

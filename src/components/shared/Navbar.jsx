@@ -55,7 +55,7 @@ const Navbar = () => {
     if (user?.email) {
       const existingToken = localStorage.getItem("token");
       if (!existingToken) {
-        fetch("http://localhost:7000/jwt", {
+        fetch("https://tutorflux-serve-2.onrender.com/jwt", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: user.email }),

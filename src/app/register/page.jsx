@@ -21,7 +21,6 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  GraduationCap,
   Sparkles,
   Loader2,
 } from "lucide-react";
@@ -110,8 +109,8 @@ const RegisterPage = () => {
           },
           onSuccess: () => {
             setLoading(false);
-            toast.success("Registration successful! Welcome to TutorFlux. Please log in.");
-            router.push("/login");
+            toast.success("Registration successful! Welcome to TutorFlux.");
+            router.push("/");
           },
           onError: (ctx) => {
             setLoading(false);

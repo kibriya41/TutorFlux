@@ -51,7 +51,7 @@ const BookedSessionsPage = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:7000/my-bookings?email=${user.email}`, {
+      const res = await fetch(`https://tutorflux-serve-2.onrender.com/my-bookings?email=${user.email}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -82,7 +82,7 @@ const BookedSessionsPage = () => {
     setCancelling(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:7000/booking/${cancelTarget}/cancel`, {
+      const res = await fetch(`https://tutorflux-serve-2.onrender.com/booking/${cancelTarget}/cancel`, {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token}`

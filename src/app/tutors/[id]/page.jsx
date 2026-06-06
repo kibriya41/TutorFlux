@@ -33,7 +33,7 @@ const TutorDetailPage = ({ params }) => {
 
   // Fetch tutor details
   useEffect(() => {
-    fetch(`http://localhost:7000/tutor/${id}`)
+    fetch(`https://tutorflux-serve-2.onrender.com/tutor/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Tutor not found");
         return res.json();
@@ -113,7 +113,7 @@ const TutorDetailPage = ({ params }) => {
     setBookingLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:7000/booking", {
+      const res = await fetch("https://tutorflux-serve-2.onrender.com/booking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -226,7 +226,7 @@ const TutorDetailPage = ({ params }) => {
                     {user?.email === tutor.email && (
                       <div className="flex gap-2">
                         <EditTutor tutor={tutor} onUpdate={() => {
-                          fetch(`http://localhost:7000/tutor/${id}`)
+                          fetch(`https://tutorflux-serve-2.onrender.com/tutor/${id}`)
                             .then(r => r.json())
                             .then(data => setTutor(data));
                         }} />

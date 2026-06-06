@@ -92,7 +92,7 @@ const TutorsPage = () => {
   const fetchTutors = useCallback(async () => {
     try {
       setLoading(true);
-      let url = "http://localhost:7000/tutor";
+      let url = "https://tutorflux-serve-2.onrender.com/tutor";
       const queryParams = [];
       if (search) queryParams.push(`search=${search}`);
       if (startDate) queryParams.push(`startDate=${startDate}`);

@@ -19,7 +19,7 @@ export function DeleteTutor({ tutor, onDeleted }) {
     setIsPending(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:7000/tutors/${_id}`, {
+      const res = await fetch(`https://tutorflux-serve-2.onrender.com/tutors/${_id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

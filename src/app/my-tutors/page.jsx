@@ -51,7 +51,7 @@ const MyTutorsPage = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:7000/my-tutors?email=${user.email}`, {
+      const res = await fetch(`https://tutorflux-serve-2.onrender.com/my-tutors?email=${user.email}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
