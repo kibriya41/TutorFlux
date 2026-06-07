@@ -22,6 +22,7 @@ import {
   Award,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -37,6 +38,39 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [savingName, setSavingName] = useState(false);
+
+  // Profile edit modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editImage, setEditImage] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Preset avatars for profile images
+  const PRESET_AVATARS = [
+    {
+      name: "Alex (Student)",
+      url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
+    },
+    {
+      name: "Sarah (Math)",
+      url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
+    },
+    {
+      name: "Jessica (Science)",
+      url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+    },
+    {
+      name: "David (History)",
+      url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    },
+    {
+      name: "Ryan (Coding)",
+      url: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&h=150&fit=crop&crop=face",
+    },
+    {
+      name: "Elena (Language)",
+      url: "https://images.unsplash.com/photo-1520341280432-4749d4d7bcf9?w=150&h=150&fit=crop&crop=face",
+    },
+  ];
 
   // Set page title
   useEffect(() => {
@@ -64,10 +98,13 @@ export default function ProfilePage() {
     }
   }, [session, isPending, router]);
 
-  // Sync edit name with user
+  // Sync edit states with user
   useEffect(() => {
-    if (user?.name) setEditName(user.name);
-  }, [user]);
+    if (user) {
+      setEditName(user.name || "");
+      setEditImage(user.image || "");
+    }
+  }, [user, isEditModalOpen]);
 
   // Fetch stats
   useEffect(() => {
@@ -114,6 +151,27 @@ export default function ProfilePage() {
       toast.error("Failed to update name.");
     } finally {
       setSavingName(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      toast.error("Name cannot be empty.");
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      await authClient.updateUser({
+        name: editName.trim(),
+        image: editImage.trim() || null,
+      });
+      toast.success("Profile updated successfully!");
+      setIsEditModalOpen(false);
+      router.refresh();
+    } catch (err) {
+      toast.error("Failed to update profile.");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -186,17 +244,25 @@ export default function ProfilePage() {
           <div className="bg-white dark:bg-[#111827] rounded-3xl shadow-xl shadow-slate-200/60 dark:shadow-black/30 p-6 md:p-8 border border-slate-100 dark:border-slate-800">
             <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
               {/* Avatar */}
-              <div className="relative">
-                <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden shadow-lg ring-4 ring-white dark:ring-[#111827] border-2 border-blue-100 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <div 
+                className="relative group cursor-pointer" 
+                onClick={() => setIsEditModalOpen(true)}
+                title="Click to edit profile picture"
+              >
+                <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden shadow-lg ring-4 ring-white dark:ring-[#111827] border-2 border-blue-100 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center relative">
                   {user?.image ? (
                     <img
                       src={user.image}
                       alt={user.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <span className="text-4xl font-bold text-white">{initials}</span>
                   )}
+                  {/* Camera overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 rounded-2xl">
+                    <Camera className="w-8 h-8 text-white" />
+                  </div>
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-2 border-white dark:border-[#111827] flex items-center justify-center shadow-md">
                   <CheckCircle2 className="w-4 h-4 text-white" />
@@ -246,9 +312,9 @@ export default function ProfilePage() {
                     </h1>
                     <button
                       id="edit-name-trigger"
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => setIsEditModalOpen(true)}
                       className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-500 hover:text-blue-600 transition"
-                      title="Edit name"
+                      title="Edit profile"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
@@ -277,6 +343,14 @@ export default function ProfilePage() {
                   <Star className="w-4 h-4 fill-blue-500 text-blue-500" />
                   TutorFlux Member
                 </span>
+                <button
+                  id="edit-profile-btn"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold shadow-sm transition-all duration-200 active:scale-95 text-sm"
+                >
+                  <Edit3 className="w-4 h-4 text-blue-500" />
+                  Edit Profile
+                </button>
               </div>
             </div>
           </div>
@@ -502,6 +576,132 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsEditModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Profile</h3>
+                <button
+                  id="close-edit-modal-btn"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Name Field */}
+                <div>
+                  <label htmlFor="edit-profile-name-input" className="block text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input
+                      id="edit-profile-name-input"
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Avatar URL Field */}
+                <div>
+                  <label htmlFor="edit-profile-image-input" className="block text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                    Profile Image URL
+                  </label>
+                  <div className="relative">
+                    <Camera className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input
+                      id="edit-profile-image-input"
+                      type="text"
+                      value={editImage}
+                      onChange={(e) => setEditImage(e.target.value)}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Preset Avatars Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                    Or choose a preset avatar
+                  </label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {PRESET_AVATARS.map((avatar, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setEditImage(avatar.url)}
+                        className={`relative rounded-xl overflow-hidden aspect-square border-2 transition-all ${
+                          editImage === avatar.url
+                            ? "border-blue-500 scale-105 ring-2 ring-blue-500/20"
+                            : "border-transparent hover:scale-105"
+                        }`}
+                        title={avatar.name}
+                      >
+                        <img src={avatar.url} alt={avatar.name} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  id="edit-profile-cancel-btn"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl text-sm transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="edit-profile-save-btn"
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {savingProfile ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
