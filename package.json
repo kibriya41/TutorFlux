@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.6.11",
     "@gravity-ui/icons": "^2.18.0",
