@@ -127,7 +127,7 @@ const RegisterPage = () => {
   };
 
   // Better Auth Google Social Login
-  const handleGoogleLogin = async () => {
+  const handleGoogleLoginn = async () => {
     try {
       await authClient.signIn.social(
         {
@@ -353,7 +353,7 @@ const RegisterPage = () => {
             <Button
               type="button"
               variant="bordered"
-              onPress={handleGoogleLogin}
+              onPress={handleGoogleLoginn}
               isLoading={loading}
               className="w-full rounded-xl py-3 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
             >
