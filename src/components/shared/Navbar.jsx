@@ -4,10 +4,20 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
+  Home,
+  GraduationCap,
+  PlusCircle,
   BookOpen,
+  CalendarCheck,
   Moon,
   Sun,
+  Menu,
+  X,
+  Sparkles,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 import NavLink from "./NavLink";
 import { CustomTrigger } from "./CustomTrigger";
@@ -18,6 +28,7 @@ const Navbar = () => {
   const pathname = usePathname();
 
   const [darkMode, setDarkMode] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Build the login URL with a callbackUrl so the user returns here after signing in
   const loginHref =
@@ -37,6 +48,34 @@ const Navbar = () => {
       document.documentElement.classList.remove("dark");
     }
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Handle escape key to close mobile menu
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  // Prevent scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
 
   const toggleDarkMode = () => {
     const nextDark = !darkMode;
@@ -73,106 +112,206 @@ const Navbar = () => {
     }
   }, [user]);
 
+  const navLinks = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/tutors", label: "Find Tutors", icon: GraduationCap },
+    ...(user
+      ? [
+          { href: "/add-tutor", label: "Add Tutor", icon: PlusCircle },
+          { href: "/my-tutors", label: "My Tutors", icon: BookOpen },
+          { href: "/booked", label: "Booked Sessions", icon: CalendarCheck },
+        ]
+      : []),
+  ];
+
   return (
-    <nav className="w-full border-b border-gray-200 bg-white dark:bg-[#0f172a] dark:border-gray-800 transition-all duration-300">
-      <div className="container mx-auto px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-[#0a0e1a]/85 backdrop-blur-md transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="TutorFlux" className="w-11 h-11 rounded-xl object-cover shadow-lg" />
-
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Tutor<span className="text-blue-600">Flux</span>
-              </h1>
-
-              <p className="text-[11px] tracking-widest text-gray-500 dark:text-gray-400 uppercase">
-                Learn. Grow. Excel.
-              </p>
+          <Link
+            href="/"
+            className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-xl p-1"
+            aria-label="TutorFlux Home"
+          >
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
+              <img
+                src="/logo.png"
+                alt="TutorFlux Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                  Tutor<span className="text-blue-600 dark:text-blue-500">Flux</span>
+                </span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 opacity-80" />
+              </div>
+              <span className="text-[10px] tracking-widest text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                Learn • Grow • Excel
+              </span>
             </div>
           </Link>
 
-          {/* Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <NavLink
-              href="/"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-            >
-              Home
-            </NavLink>
-
-            <NavLink
-              href="/tutors"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-            >
-              Tutors
-            </NavLink>
-
-            {user && (
-              <>
-                <NavLink
-                  href="/add-tutor"
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-                >
-                  Add Tutor
+          {/* Desktop Navigation Links */}
+          <nav
+            aria-label="Main Navigation"
+            className="hidden md:flex items-center gap-1 lg:gap-2"
+          >
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <NavLink key={link.href} href={link.href}>
+                  <span className="flex items-center gap-1.5">
+                    <Icon className="w-4 h-4 opacity-70" />
+                    <span>{link.label}</span>
+                  </span>
                 </NavLink>
+              );
+            })}
+          </nav>
 
-                <NavLink
-                  href="/my-tutors"
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-                >
-                  My Tutors
-                </NavLink>
-
-                <NavLink
-                  href="/booked"
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 transition"
-                >
-                  My Booked Sessions
-                </NavLink>
-              </>
-            )}
-          </div>
-
-          {/* Right Side */}
-          <div className="flex items-center gap-5">
+          {/* Right Action Icons & Auth */}
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-              aria-label="Toggle theme"
+              className="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
               {darkMode ? (
-                <Sun className="w-5 h-5 text-yellow-400" />
+                <Sun className="w-5 h-5 text-amber-400 animate-in spin-in-180 duration-300" />
               ) : (
-                <Moon className="w-5 h-5 text-gray-700" />
+                <Moon className="w-5 h-5 text-slate-700 animate-in spin-in-180 duration-300" />
               )}
             </button>
 
-            {/* Sign In / Profile */}
+            {/* User Auth Buttons / Profile Trigger */}
             {user ? (
-              <CustomTrigger />
+              <div className="flex items-center">
+                <CustomTrigger />
+              </div>
             ) : (
-              <>
+              <div className="hidden sm:flex items-center gap-3">
                 <Link
                   href={loginHref}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 font-medium transition"
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   Sign In
                 </Link>
 
                 <Link
                   href="/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition"
+                  className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
-                  Get Started
+                  <UserPlus className="w-4 h-4" />
+                  <span>Get Started</span>
                 </Link>
-              </>
+              </div>
             )}
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 text-slate-900 dark:text-white" />
+              ) : (
+                <Menu className="w-6 h-6 text-slate-900 dark:text-white" />
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 top-20 bg-slate-950/60 backdrop-blur-xs z-40 md:hidden"
+              aria-hidden="true"
+            />
+
+            {/* Slide-down Mobile Navigation Panel */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="fixed top-20 left-0 right-0 z-50 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 shadow-2xl md:hidden max-h-[calc(100vh-5rem)] overflow-y-auto"
+            >
+              <div className="px-5 py-6 space-y-4">
+                <div className="space-y-1">
+                  <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                    Navigation Menu
+                  </p>
+                  {navLinks.map((link) => {
+                    const Icon = link.icon;
+                    const isActive =
+                      link.href === "/"
+                        ? pathname === "/"
+                        : pathname.startsWith(link.href);
+
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors ${
+                          isActive
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-5 h-5 ${
+                            isActive ? "text-white" : "text-blue-600 dark:text-blue-400"
+                          }`}
+                        />
+                        <span>{link.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {!user && (
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                    <Link
+                      href={loginHref}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>Sign In</span>
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-md shadow-blue-500/25 transition"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>Create Free Account</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </header>
   );
 };
 
