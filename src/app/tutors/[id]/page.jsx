@@ -5,13 +5,29 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { DeleteTutor } from "@/components/DeleteTutor";
 import { EditTutor } from "@/components/EditTutor";
-import { 
-  Star, MapPin, Clock, GraduationCap, BookOpen, 
-  Calendar, User, Mail, Phone, CheckCircle, Edit3, 
-  Loader2, X, AlertTriangle, Info 
+import {
+  Star,
+  MapPin,
+  Clock,
+  GraduationCap,
+  BookOpen,
+  Calendar,
+  User,
+  Mail,
+  Phone,
+  CheckCircle2,
+  Loader2,
+  X,
+  AlertTriangle,
+  Info,
+  ArrowLeft,
+  ShieldCheck,
+  Zap,
+  CalendarCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
-import { Button, Input, Card, Label } from "@heroui/react";
 import { toast } from "react-hot-toast";
 
 const TutorDetailPage = ({ params }) => {
@@ -22,9 +38,9 @@ const TutorDetailPage = ({ params }) => {
 
   const [tutor, setTutor] = useState(null);
   const [loadingTutor, setLoadingTutor] = useState(true);
-  const [isDark, setIsDark] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [copiedContact, setCopiedContact] = useState(false);
 
   const [bookingForm, setBookingForm] = useState({
     studentName: "",
@@ -48,19 +64,19 @@ const TutorDetailPage = ({ params }) => {
       });
   }, [id]);
 
-  // Set dynamic title
+  // Dynamic document title
   useEffect(() => {
-    if (tutor) {
-      document.title = `${tutor.tutorName} - Details | TutorFlux`;
+    if (tutor?.tutorName) {
+      document.title = `${tutor.tutorName} - Verified Tutor Profile | TutorFlux`;
     } else {
-      document.title = "Tutor Details | TutorFlux";
+      document.title = "Tutor Profile Details | TutorFlux";
     }
   }, [tutor]);
 
   // Protect route
   useEffect(() => {
     if (!isPending && !session) {
-      toast.error("Please sign in to view tutor details.");
+      toast.error("Please sign in to view tutor profile and book sessions.");
       router.push(`/login?callbackUrl=${encodeURIComponent(`/tutors/${id}`)}`);
     }
   }, [session, isPending, router, id]);
@@ -68,23 +84,32 @@ const TutorDetailPage = ({ params }) => {
   // Auto fill booking fields once session is loaded
   useEffect(() => {
     if (user) {
-      setBookingForm({
+      setBookingForm((prev) => ({
+        ...prev,
         studentName: user.name || "",
-        phone: "",
-      });
+      }));
     }
   }, [user]);
 
-  // Detect dark mode
+  // Handle escape key to close modal
   useEffect(() => {
-    const checkDark = () => {
-      setIsDark(document.documentElement.classList.contains("dark"));
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isModalOpen) {
+        setIsModalOpen(false);
+      }
     };
-    checkDark();
-    const observer = new MutationObserver(checkDark);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen]);
+
+  const copyContactEmail = () => {
+    if (tutor?.email) {
+      navigator.clipboard.writeText(tutor.email);
+      setCopiedContact(true);
+      toast.success("Tutor email copied to clipboard!");
+      setTimeout(() => setCopiedContact(false), 2000);
+    }
+  };
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
@@ -96,7 +121,7 @@ const TutorDetailPage = ({ params }) => {
     // 1. Verify slot limit
     const totalSlot = parseInt(tutor.totalSlot) || 0;
     if (totalSlot <= 0) {
-      toast.error("No available slots left.");
+      toast.error("No available slots left for this tutor.");
       return;
     }
 
@@ -106,7 +131,7 @@ const TutorDetailPage = ({ params }) => {
     const sessionDate = new Date(tutor.sessionStartDate);
     sessionDate.setHours(0, 0, 0, 0);
     if (currentDate < sessionDate) {
-      toast.error("Booking is not available yet for this tutor");
+      toast.error("Booking is not available yet. Please wait until the start date.");
       return;
     }
 
@@ -117,7 +142,7 @@ const TutorDetailPage = ({ params }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           tutorId: tutor._id,
@@ -125,24 +150,24 @@ const TutorDetailPage = ({ params }) => {
           studentName: bookingForm.studentName || user.name,
           studentEmail: user.email,
           studentPhone: bookingForm.phone,
-        })
+        }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        toast.success("Session booked successfully!");
+        toast.success("Session booked successfully! Token generated.");
         setIsModalOpen(false);
         // Decrease slots locally
-        setTutor(prev => ({
+        setTutor((prev) => ({
           ...prev,
-          totalSlot: Math.max(0, parseInt(prev.totalSlot) - 1)
+          totalSlot: Math.max(0, parseInt(prev.totalSlot) - 1),
         }));
       } else {
         toast.error(data.message || "Failed to book session");
       }
     } catch (err) {
       console.error(err);
-      toast.error("An error occurred. Please try again.");
+      toast.error("An error occurred while booking. Please try again.");
     } finally {
       setBookingLoading(false);
     }
@@ -150,23 +175,39 @@ const TutorDetailPage = ({ params }) => {
 
   if (isPending || loadingTutor) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0a0e1a] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Loading tutor details...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex flex-col items-center justify-center gap-4 py-20">
+        <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-500 animate-spin" />
+        <p className="text-slate-600 dark:text-slate-400 font-medium text-sm">
+          Loading tutor profile details...
+        </p>
       </div>
     );
   }
 
   if (!session || !tutor) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0a0e1a] flex items-center justify-center">
-        <div className="text-center text-xl text-slate-600 dark:text-slate-400">Tutor not found</div>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex items-center justify-center py-20 px-4">
+        <div className="text-center max-w-md bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            Tutor Not Found
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+            The tutor listing you are looking for might have been removed or does not exist.
+          </p>
+          <Link
+            href="/tutors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Tutors
+          </Link>
+        </div>
       </div>
     );
   }
 
   // Parse institution & experience
-  const [institution, experienceYears] = (tutor.institutionExperience || "Unknown,0").split(",");
+  const [institution, experienceYears] = (tutor.institutionExperience || "Independent,0").split(",");
   const experience = `${experienceYears || "0"} Years Experience`;
 
   // Booking Checks
@@ -180,337 +221,437 @@ const TutorDetailPage = ({ params }) => {
   const isNotAvailableYet = currentDate < sessionDate;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0a0e1a] pb-12 transition-colors duration-500">
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <Link href="/tutors" className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm transition-all duration-200">
-          ← Back to Tutors
-        </Link>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 pb-16 transition-colors duration-300">
+      {/* ═══ Breadcrumb & Navigation Bar ═══ */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 py-3.5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <Link
+            href="/tutors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg px-2 py-1"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to All Tutors</span>
+          </Link>
+
+          <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline-block">
+            Tutor ID: {tutor._id}
+          </span>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-          {/* Main Content */}
+          {/* ═══ Left Column: Main Profile & Details ═══ */}
           <div className="lg:col-span-8 space-y-8">
-
-            {/* Profile Header Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-slate-200/50 dark:border-gray-800 transition-all duration-500 hover:shadow-2xl group">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Profile Image */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-36 h-36 md:w-44 md:h-44 rounded-3xl overflow-hidden shadow-md transition-transform duration-700 group-hover:scale-105">
+            {/* Header Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800 transition-all duration-300">
+              <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
+                {/* Profile Image with badge */}
+                <div className="relative shrink-0 mx-auto sm:mx-0">
+                  <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden shadow-lg border-2 border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
                     <img
-                      src={tutor.photo || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&h=300&fit=crop"}
+                      src={
+                        tutor.photo ||
+                        "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&h=300&fit=crop"
+                      }
                       alt={tutor.tutorName}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-cover"
                       style={{ objectPosition: "center 20%" }}
                     />
                   </div>
-                  <div className={`absolute -bottom-2 -right-2 ${isFullyBooked ? 'bg-red-500' : 'bg-green-500'} text-white text-xs px-3 py-1 rounded-full font-medium shadow animate-pulse`}>
-                    {isFullyBooked ? "Fully Booked" : "Available Now"}
+                  <div
+                    className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:-right-2 text-white text-xs px-3 py-1 rounded-full font-bold shadow-md flex items-center gap-1 ${
+                      isFullyBooked ? "bg-rose-600" : "bg-emerald-600"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span>{isFullyBooked ? "Fully Booked" : "Available Now"}</span>
                   </div>
                 </div>
 
-                {/* Tutor Info */}
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
+                {/* Info Header */}
+                <div className="flex-1 w-full text-center sm:text-left">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                     <div>
-                      <span className="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-3">
-                        {tutor.subject}
+                      <span className="inline-block bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 text-xs font-bold px-3 py-1 rounded-full mb-2">
+                        {tutor.subject || "Academic Mentor"}
                       </span>
-                      <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{tutor.tutorName}</h1>
+                      <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {tutor.tutorName}
+                      </h1>
                     </div>
 
-                    {/* Owner Edit / Delete actions */}
+                    {/* Owner Edit & Delete Buttons */}
                     {user?.email === tutor.email && (
-                      <div className="flex gap-2">
-                        <EditTutor tutor={tutor} onUpdate={() => {
-                          fetch(`https://tutorflux-serve-2.onrender.com/tutor/${id}`)
-                            .then(r => r.json())
-                            .then(data => setTutor(data));
-                        }} />
+                      <div className="flex items-center gap-2 justify-center sm:justify-start">
+                        <EditTutor
+                          tutor={tutor}
+                          onUpdate={() => {
+                            fetch(`https://tutorflux-serve-2.onrender.com/tutor/${id}`)
+                              .then((r) => r.json())
+                              .then((data) => setTutor(data));
+                          }}
+                        />
                         <DeleteTutor tutor={tutor} onDeleted={() => router.push("/my-tutors")} />
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-5 mt-4">
-                    <div className="flex items-center gap-1.5">
-                      <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                      <span className="font-semibold text-lg text-slate-800 dark:text-slate-200">4.8</span>
-                      <span className="text-slate-500 dark:text-slate-400">(124 reviews)</span>
+                  {/* Rating & Stats row */}
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-3 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-800/50 px-2.5 py-1 rounded-xl">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      <span className="font-bold text-amber-700 dark:text-amber-400">
+                        {tutor.rating || "4.9"}
+                      </span>
+                      <span className="text-xs text-slate-400 font-medium">(140+ reviews)</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                      <Clock className="w-4 h-4" />
+
+                    <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+                      <Clock className="w-4 h-4 text-blue-500" />
                       <span>{experience}</span>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-4 mt-4 text-slate-600 dark:text-slate-400">
-                    <div className="flex items-center gap-1.5">
-                      <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span>{institution}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span>{tutor.location}</span>
+                    <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+                      <MapPin className="w-4 h-4 text-blue-500" />
+                      <span>{tutor.location || "Online"}</span>
                     </div>
                   </div>
 
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <span className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-medium px-4 py-2 rounded-2xl">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                      {tutor.teachingMode}
+                  {/* Tags */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-xl">
+                      <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+                      Mode: {tutor.teachingMode || "Online"}
                     </span>
-                    <span className="inline-flex items-center gap-2 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-sm font-medium px-4 py-2 rounded-2xl">
-                      <Calendar className="w-4 h-4" />
-                      {tutor.availableDays}
+                    <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-xl">
+                      <Calendar className="w-3.5 h-3.5 text-purple-500" />
+                      {tutor.availableDays || "Flexible Schedule"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Price & Booking Restrictions & Actions */}
-              <div className="mt-8 pt-6 border-t border-slate-200/50 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Booking CTA Bar */}
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">${tutor.hourlyFee}</span>
-                  <span className="text-slate-500 dark:text-slate-400">/hour</span>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                    {tutor.totalSlot} slots left for sessions
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400">
+                      ${tutor.hourlyFee || "35"}
+                    </span>
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                      / hour per session
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    {totalSlotsLeft > 0
+                      ? `${totalSlotsLeft} active booking slots remaining`
+                      : "Zero slots left for the current batch"}
                   </p>
                 </div>
 
                 {isFullyBooked ? (
-                  <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-4 rounded-2xl text-red-600 dark:text-red-400">
-                    <AlertTriangle className="w-5 h-5" />
-                    <span className="font-semibold text-sm">No available slots left.</span>
+                  <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>No available slots left. Check back later!</span>
                   </div>
                 ) : isNotAvailableYet ? (
-                  <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-4 rounded-2xl text-amber-700 dark:text-amber-400">
-                    <Info className="w-5 h-5" />
-                    <span className="font-semibold text-sm">Booking is not available yet for this tutor</span>
+                  <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>
+                      Booking starts on{" "}
+                      {new Date(tutor.sessionStartDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
                   </div>
                 ) : (
-                  <Button
-                    onPress={() => setIsModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-6 rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/25 transition-all"
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   >
-                    Book a Session
-                  </Button>
+                    <Zap className="w-5 h-5" />
+                    <span>Book a Session Now</span>
+                  </button>
                 )}
               </div>
             </div>
 
-            {/* About Me */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-slate-200/50 dark:border-gray-800 transition-all">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">About Me</h2>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[17px]">
-                {tutor.description}
+            {/* About Section */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                About the Tutor
+              </h2>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-base whitespace-pre-line">
+                {tutor.description ||
+                  `Dedicated academic tutor with years of teaching experience. Specializes in building core foundational concepts, exam preparation strategies, and personalized study schedules designed for student success.`}
               </p>
 
-              {/* Info Grid */}
+              {/* Highlight Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                 {[
                   {
                     icon: GraduationCap,
-                    color: "blue",
-                    label: "Institution",
-                    value: institution
+                    label: "Institution / Background",
+                    value: institution || "Verified Academic Institution",
                   },
                   {
                     icon: Clock,
-                    color: "purple",
-                    label: "Available Time",
-                    value: tutor.availableTime
+                    label: "Daily Available Time",
+                    value: tutor.availableTime || "Flexible Time Slots",
                   },
                   {
                     icon: Calendar,
-                    color: "amber",
-                    label: "Available Days",
-                    value: tutor.availableDays
+                    label: "Available Teaching Days",
+                    value: tutor.availableDays || "Monday - Friday",
                   },
                   {
                     icon: BookOpen,
-                    color: "emerald",
-                    label: "Total Slots",
-                    value: `${tutor.totalSlot} sessions`
+                    label: "Total Session Slots",
+                    value: `${tutor.totalSlot || "0"} Sessions Allocated`,
                   },
                   {
-                    icon: CheckCircle,
-                    color: "pink",
-                    label: "Session Starts",
-                    value: new Date(tutor.sessionStartDate).toLocaleDateString('en-US', {
-                      year: 'numeric', month: 'long', day: 'numeric'
-                    })
+                    icon: CalendarCheck,
+                    label: "Session Start Date",
+                    value: new Date(tutor.sessionStartDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }),
                   },
-                ].map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-4 p-5 bg-slate-50 dark:bg-gray-800/50 rounded-2xl group transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-                  >
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100/50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
-                      <item.icon className="w-6 h-6" />
+                ].map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={index}
+                      className="flex gap-4 p-4 sm:p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-blue-500/30 transition-all"
+                    >
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-blue-100/60 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shrink-0">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          {item.label}
+                        </p>
+                        <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                          {item.value}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-slate-900 dark:text-white">{item.label}</p>
-                      <p className="text-slate-600 dark:text-slate-300">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4">
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-slate-200/50 dark:border-gray-800 sticky top-6 transition-all hover:shadow-xl">
-              <h3 className="font-semibold text-lg mb-5 text-slate-900 dark:text-white">Contact Information</h3>
+          {/* ═══ Right Column: Contact & Safety Sidebar ═══ */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Contact Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 sticky top-24">
+              <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">
+                Tutor Information
+              </h3>
 
-              <div className="space-y-5">
+              <div className="space-y-4 text-sm">
                 <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <User className="w-5 h-5 text-slate-400 shrink-0" />
-                  <span>{tutor.tutorName}</span>
+                  <User className="w-4 h-4 text-blue-500 shrink-0" />
+                  <span className="font-medium text-slate-900 dark:text-white">{tutor.tutorName}</span>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <Mail className="w-5 h-5 text-slate-400 shrink-0" />
-                  <span className="truncate">{tutor.email || "Not provided"}</span>
+
+                <div className="flex items-center justify-between gap-2 text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-3 truncate">
+                    <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span className="truncate">{tutor.email || "Contact via platform"}</span>
+                  </div>
+                  {tutor.email && (
+                    <button
+                      type="button"
+                      onClick={copyContactEmail}
+                      className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"
+                      title="Copy email"
+                      aria-label="Copy tutor email"
+                    >
+                      {copiedContact ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  )}
                 </div>
+
                 <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <Phone className="w-5 h-5 text-slate-400 shrink-0" />
+                  <Phone className="w-4 h-4 text-blue-500 shrink-0" />
                   <span>{tutor.phone || "+880 1XXX-XXXXXX"}</span>
                 </div>
+
                 <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
-                  <span>{tutor.location}</span>
+                  <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+                  <span>{tutor.location || "Online"}</span>
                 </div>
               </div>
 
-              <button 
-                onClick={() => toast("Messaging coming soon!", { icon: "💬" })}
-                className="w-full mt-8 bg-slate-900 hover:bg-black dark:bg-gray-800 dark:hover:bg-gray-700 text-white py-4 rounded-2xl font-semibold transition-all duration-300 hover:scale-105"
-              >
-                Message Tutor
-              </button>
+              {/* Safety Pledge Card */}
+              <div className="mt-6 p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/60 space-y-2">
+                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 font-bold text-xs">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>TutorFlux Student Guarantee</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Every booking generates a verifiable digital session token. Verified tutors with background review.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Booking Modal */}
+      {/* ═══ Accessible Booking Modal ═══ */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="booking-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}
         >
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-6 border border-slate-200 dark:border-zinc-800">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-zinc-800">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
-                <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Book Learning Session
-                </h3>
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 id="booking-modal-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                    Confirm Session Booking
+                  </h3>
+                  <p className="text-xs text-slate-400">Step 1 of 1 • 100% Secure</p>
+                </div>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                aria-label="Close booking modal"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Body / Form */}
-            <form onSubmit={handleBookingSubmit} className="flex-1 overflow-y-auto py-5 space-y-4">
-              {/* Tutor Info Display */}
-              <div className="bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-2xl flex items-center gap-3">
-                <img
-                  src={tutor.photo || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&h=100&fit=crop"}
-                  alt={tutor.tutorName}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 block">Tutor Name</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{tutor.tutorName}</span>
+            {/* Session Summary Card */}
+            <div className="px-6 pt-5">
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={
+                      tutor.photo ||
+                      "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&h=100&fit=crop"
+                    }
+                    alt={tutor.tutorName}
+                    className="w-12 h-12 rounded-xl object-cover"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">
+                      {tutor.subject}
+                    </span>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+                      {tutor.tutorName}
+                    </h4>
+                    <span className="text-xs text-slate-400 block">{tutor.teachingMode} Session</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-lg font-black text-slate-900 dark:text-white">
+                    ${tutor.hourlyFee}
+                  </span>
+                  <span className="text-xs text-slate-400 block">/ hour</span>
                 </div>
               </div>
+            </div>
 
+            {/* Form */}
+            <form onSubmit={handleBookingSubmit} className="px-6 py-5 space-y-4">
               {/* Student Name */}
               <div>
-                <Label className="text-slate-700 dark:text-gray-300 text-sm font-semibold mb-2 block">
-                  Student Name
-                </Label>
-                <Input
-                  value={bookingForm.studentName}
-                  onChange={(e) => setBookingForm(prev => ({ ...prev, studentName: e.target.value }))}
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Student Name *
+                </label>
+                <input
+                  type="text"
                   required
-                  placeholder="Your Full Name"
-                  className="w-full px-4 py-3 rounded-xl border bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-950 dark:text-white"
+                  value={bookingForm.studentName}
+                  onChange={(e) =>
+                    setBookingForm((prev) => ({ ...prev, studentName: e.target.value }))
+                  }
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition"
                 />
               </div>
 
               {/* Student Email */}
               <div>
-                <Label className="text-slate-700 dark:text-gray-300 text-sm font-semibold mb-2 block">
-                  Student Email
-                </Label>
-                <Input
-                  value={user.email}
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Registered Email
+                </label>
+                <input
+                  type="email"
                   disabled
-                  className="w-full px-4 py-3 rounded-xl border bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 cursor-not-allowed opacity-80"
+                  value={user?.email || ""}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-sm font-medium cursor-not-allowed"
                 />
               </div>
 
-              {/* Tutor ID (Auto-filled & disabled) */}
+              {/* Student Phone */}
               <div>
-                <Label className="text-slate-700 dark:text-gray-300 text-sm font-semibold mb-2 block">
-                  Tutor ID
-                </Label>
-                <Input
-                  value={tutor._id}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl border bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 cursor-not-allowed opacity-80"
-                />
-              </div>
-
-              {/* Phone number */}
-              <div>
-                <Label className="text-slate-700 dark:text-gray-300 text-sm font-semibold mb-2 block">
-                  Phone Number
-                </Label>
-                <Input
-                  value={bookingForm.phone}
-                  onChange={(e) => setBookingForm(prev => ({ ...prev, phone: e.target.value }))}
-                  required
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Contact Phone Number *
+                </label>
+                <input
                   type="tel"
+                  required
+                  value={bookingForm.phone}
+                  onChange={(e) =>
+                    setBookingForm((prev) => ({ ...prev, phone: e.target.value }))
+                  }
                   placeholder="e.g. +880 1712-345678"
-                  className="w-full px-4 py-3 rounded-xl border bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-950 dark:text-white focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition"
                 />
               </div>
 
-              {/* Submit / Cancel Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
-                <Button
-                  variant="light"
-                  onPress={() => setIsModalOpen(false)}
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
                   disabled={bookingLoading}
-                  className="font-semibold text-slate-500 hover:text-slate-700"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+
+                <button
                   type="submit"
-                  isLoading={bookingLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20"
+                  disabled={bookingLoading}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold shadow-md shadow-blue-500/25 transition disabled:opacity-60"
                 >
-                  Confirm Booking
-                </Button>
+                  {bookingLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Confirming...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Confirm & Book Now</span>
+                    </>
+                  )}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 };
